@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+    <link href="/static/css/bootstrap.min.css" rel="stylesheet" media="screen">
+    <script src="static/jquery-1.7.2.min.js"></script>
+    <script>
+        processComment = function(body) {
+            $.getJSON('/moderate?body='+encodeURIComponent(body), function(result) {
+
+                if (result[0][0] == "visible") {
+                    var count = parseInt($('#commentnum').text(), 10);
+                    count += 1;
+                    $('#commentnum').text(count);
+                } else {
+                    var count = parseInt($('#commentmodnum').text(), 10);
+                    count += 1;
+                    $('#commentmodnum').text(count);
+                    var prob = Math.round(result[0][1]*100);
+                    var klass = "well";
+                    if (prob < 50) klass = "well muted"
+                    text = '<div class="'+klass+'" style="display: none">';
+                    text += '<span class="confidence">';
+                    text += Math.round(result[0][1]*100)+"% "+result[0][0];
+                    text += Math.round(result[1][1]*100)+"% "+result[1][0];
+                    text += '</span>';
+                    text += '<div class="commentbody">';
+                    text += body;
+                    text += '</div>';
+                    text += '<span class="btn btn-danger">Moderate</span>';
+                    text += '</div>';
+
+                    $(text).prependTo('#body').slideDown();
+                }
+            });
+        };
+        $.getJSON("/static/comments.json", function (comments) {
+            var commentIndex = 0;
+            setInterval(function() {
+                processComment(comments[commentIndex]);
+                commentIndex += 1;
+            }, 2000);
+        });
+    </script>
+    <script>
+    </script>
+    <body>
+        <div class="container">
+            <h1>Comment Test</h1>
+            <h1>Comments processed: <span id=commentnum>0</span></h1>
+            <h1>Comments to be moderated: <span id=commentmodnum>0</span></h1>
+            <p id="body"></p>
+        </div>
+    </body>
+</html>

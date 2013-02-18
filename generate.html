@@ -1,0 +1,27 @@
+<html>
+  <script src="jquery-1.7.2.min.js"></script>
+  <script>
+    var words = null;
+    $.getJSON("words.json", function(data) {
+      words = data;
+      var body = $("#body");
+      for (var p = 0; p < 10; p++) {
+        body.append("<p>");
+        var word = "*BEGIN*";
+        while (word != "*END*") {
+          if (word != "*BEGIN*") body.append(word+" ");
+          console.log("Using word: "+word);
+          var wordlist = words[word];
+          console.log(wordlist);
+          var max = wordlist.length-1;
+          word = wordlist[Math.round(Math.random()*max)];
+        }
+        body.append("</p>");
+      }
+    })
+  </script>
+  <body>
+    <h1>Word Test</h1>
+    <p id="body"></p>
+  </body>
+</html>
