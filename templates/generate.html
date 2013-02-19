@@ -1,0 +1,72 @@
+<html>
+  <script src="/static/js/jquery-1.7.2.min.js"></script>
+  <script>
+      writer = {
+          startingPair: null,
+          currentPair: null,
+          timer: null,
+          wordlist: null,
+          total: 0,
+
+          selectRandomWord: function(word) {
+              var wordset = this.wordlist[word];
+              var index = Math.floor(Math.random()*wordset.length);
+              var newWord = wordset[index];
+              console.log(word+" -> "+newWord);
+              return newWord;
+          },
+
+          init: function(words, body) {
+              console.log("Initialising");
+              if (this.timer !== null) clearTimeout(this.timer);
+              this.body = body;
+              this.wordlist = words;
+
+              this.newParagraph();
+
+              this.write();
+          },
+          newSentence: function() {
+              this.sentenceTotal += 1;
+              this.startingPair = this.currentPair = this.selectRandomWord("*BEGIN*");
+              var pair = this.startingPair.split(' ');
+              this.addWord(pair[0]);
+              this.addWord(pair[1]);
+              console.log("Starting new sentence with words: "+this.startingPair);
+          },
+          newParagraph: function() {
+              this.total += 1;
+              if (this.total < 10) {
+                  this.sentenceTotal = 0;
+                  this.paragraph = $("<p></p>");
+                  this.body.append(this.paragraph);
+                  this.newSentence();
+              }
+          },
+          write: function() {
+              if (this.currentPair in this.wordlist) {
+                  var nextWord = this.selectRandomWord(this.currentPair);
+                  this.addWord(nextWord);
+                  this.currentPair = this.currentPair.split(' ')[1] + ' ' + nextWord;
+              } else {
+                  if (this.sentenceTotal > Math.floor(Math.random()*4))
+                    this.newParagraph();
+                  else 
+                    this.newSentence();
+              }
+              if (this.total < 10) this.timer = setTimeout(function(){writer.write();}, 100);
+          },
+          addWord: function(word) {
+              this.paragraph.append(word+' ');
+          }
+      }
+
+      $.getJSON("/static/comment-pairs.json", function(data) {
+          writer.init(data, $("#body"));
+      })
+  </script>
+  <body>
+      <h1>Word Test</h1>
+      <p id="body"></p>
+  </body>
+</html>
