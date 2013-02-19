@@ -1,4 +1,5 @@
 <html>
+    <link href="/static/css/bootstrap.min.css" rel="stylesheet" media="screen">
   <script src="/static/js/jquery-1.7.2.min.js"></script>
   <script>
       writer = {
@@ -20,6 +21,7 @@
               console.log("Initialising");
               if (this.timer !== null) clearTimeout(this.timer);
               this.body = body;
+              this.total = 0;
               this.wordlist = words;
 
               this.newParagraph();
@@ -28,6 +30,7 @@
           },
           newSentence: function() {
               this.sentenceTotal += 1;
+              $('#progressbar').width((this.total*10)+(2*this.sentenceTotal)+"%");
               this.startingPair = this.currentPair = this.selectRandomWord("*BEGIN*");
               var pair = this.startingPair.split(' ');
               this.addWord(pair[0]);
@@ -36,6 +39,7 @@
           },
           newParagraph: function() {
               this.total += 1;
+              $('#progressbar').width(this.total*10+"%");
               if (this.total < 10) {
                   this.sentenceTotal = 0;
                   this.paragraph = $("<p></p>");
@@ -54,19 +58,62 @@
                   else 
                     this.newSentence();
               }
-              if (this.total < 10) this.timer = setTimeout(function(){writer.write();}, 100);
+              if (this.total < 10) this.timer = setTimeout(function(){writer.write();}, 50);
           },
           addWord: function(word) {
               this.paragraph.append(word+' ');
           }
       }
 
-      $.getJSON("/static/comment-pairs.json", function(data) {
-          writer.init(data, $("#body"));
-      })
+      var dataSets = {};
+      var names = {
+          "Charlie Brooker": "brooker",
+          "Polly Toynbee": "toynbee",
+          "Commentors": "comment-pairs"
+      };
+      $(function(){
+          function loadData(name) {
+              var filename = names[name];
+              console.log("Loading "+filename+" for "+name);
+              $.getJSON("/static/"+filename+".json", function(data) {
+                  console.log("Finished loading "+filename);
+                  dataSets[filename] = data;
+                  $('#corpus').append('<option value="'+filename+'">'+name+'</option>');
+              })
+          }
+          for (var name in names) {
+              loadData(name);
+          }
+
+          $('#corpus').change( function(){ $('#corpus option:selected').each(
+              function(){
+                  var name = $(this).val();
+                  console.log("Starting with "+name);
+                  var body = $('#body');
+                  body.empty();
+                  writer.init(dataSets[name], body);
+              });
+          });
+          $('#start').click(function() {
+              var name =  $('#corpus option:selected').val();
+              writer.init( $('#corpus option:selected')
+      });
   </script>
   <body>
-      <h1>Word Test</h1>
-      <p id="body"></p>
+      <div class="container">
+          <div class="hero-unit">
+              <h1>Comment Generator</h1>
+          </div>
+          <div class="well">
+              <select id="corpus">
+                  <option default value="">Select a corpus</option>
+              </select>
+              <button id="start" class="btn btn-success">Start Writing</button>
+              <div class="progress progress-striped">
+  <div id="progressbar" class="bar" style="width: 0%;"></div>
+</div>
+          </div>
+          <p id="body"></p>
+      </div>
   </body>
 </html>
